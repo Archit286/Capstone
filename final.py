@@ -7,8 +7,7 @@ import firebase
 
 blink_counter = 0
 yawn_counter = 0
-alarm_level_1 = 6
-alarm_level_2 = 12
+threshold = 6
 
 cap = cv2.VideoCapture(0)
 cap.set(3, 640)
@@ -31,18 +30,24 @@ def detect(img):
         blink_counter = blink_counter + 1
     else:
         blink_counter = 0
-        firebase.setAlarm(0)
 
-    if yawn_status == "Yawn":
+    if yawn_status == "yawn":
         yawn_counter = yawn_counter + 1
     else:
         yawn_counter = 0
-        firebase.setAlarm(0)
 
-    if yawn_counter > alarm_level_2 or blink_counter > alarm_level_2:
-        firebase.setAlarm(2)
-    elif yawn_counter > alarm_level_1 or blink_counter > alarm_level_1:
-        firebase.setAlarm(1)
+    if blink_counter > threshold:
+        blink_counter = 0
+        if firebase.checkAlarm() == 0:
+            firebase.setAlarm(1)
+        else:
+            firebase.setAlarm(2)
+    elif yawn_counter > threshold:
+        yawn_counter = 0
+        if firebase.checkAlarm() == 0:
+            firebase.setAlarm(1)
+        else:
+            firebase.setAlarm(2)
 
     if firebase.checkAlarm() == 2:
         led.on()
